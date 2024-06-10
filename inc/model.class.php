@@ -54,18 +54,18 @@ class PluginDatainjectionModel extends CommonDBTM
     public $severaltimes_mapped = [];
 
     //Private or public model
-    const MODEL_PRIVATE  = 1;
-    const MODEL_PUBLIC   = 0;
+    public const MODEL_PRIVATE  = 1;
+    public const MODEL_PUBLIC   = 0;
 
     //Step constants
-    const INITIAL_STEP      = 1;
-    const FILE_STEP         = 2;
-    const MAPPING_STEP      = 3;
-    const OTHERS_STEP       = 4;
-    const READY_TO_USE_STEP = 5;
+    public const INITIAL_STEP      = 1;
+    public const FILE_STEP         = 2;
+    public const MAPPING_STEP      = 3;
+    public const OTHERS_STEP       = 4;
+    public const READY_TO_USE_STEP = 5;
 
-    const PROCESS  = 0;
-    const CREATION = 1;
+    public const PROCESS  = 0;
+    public const CREATION = 1;
 
 
 
@@ -614,7 +614,7 @@ class PluginDatainjectionModel extends CommonDBTM
         if ($ID > 0) {
             $this->check($ID, READ);
         } else {
-           // Create item
+            // Create item
             $this->check(-1, UPDATE);
             $this->getEmpty();
         }
@@ -635,7 +635,7 @@ class PluginDatainjectionModel extends CommonDBTM
         if ($ID > 0) {
             $this->check($ID, READ);
         } else {
-           // Create item
+            // Create item
             $this->check(-1, UPDATE);
             $this->getEmpty();
             echo Html::hidden('step', ['value' => 1]);
@@ -799,27 +799,21 @@ class PluginDatainjectionModel extends CommonDBTM
 
         $canedit = Session::haveRight('plugin_datainjection_model', UPDATE);
 
-        if (!$withtemplate) {
-            switch ($item->getType()) {
-                case __CLASS__:
-                    $tabs[1] = __('Model');
-                    if (!$this->isNewID($item->fields['id']) ?? -1) { /** @phpstan-ignore-line */
-                        if ($canedit) {
-                            $tabs[3] = __('File to inject', 'datainjection');
-                        }
-                        $tabs[4] = __('Mappings', 'datainjection');
-                        if ($item->fields['step'] > self::MAPPING_STEP) { /** @phpstan-ignore-line */
-                            $tabs[5] = __('Additional Information', 'datainjection');
-                            if ($canedit && $item->fields['step'] != self::READY_TO_USE_STEP) { /** @phpstan-ignore-line */
-                                $tabs[6] = __('Validation');
-                            }
-                        }
+        if (!$withtemplate && $item->getType() == __CLASS__) {
+            $tabs[1] = __('Model');
+            if (!$this->isNewID($item->fields['id'] ?? -1)) {
+                if ($canedit) {
+                    $tabs[3] = __('File to inject', 'datainjection');
+                }
+                $tabs[4] = __('Mappings', 'datainjection');
+                if ($item->fields['step'] > self::MAPPING_STEP) { /** @phpstan-ignore-line */
+                    $tabs[5] = __('Additional Information', 'datainjection');
+                    if ($canedit && $item->fields['step'] != self::READY_TO_USE_STEP) { /** @phpstan-ignore-line */
+                        $tabs[6] = __('Validation');
                     }
-                    return $tabs;
-
-                default:
-                    return '';
+                }
             }
+            return $tabs;
         }
 
         return '';
@@ -920,7 +914,7 @@ class PluginDatainjectionModel extends CommonDBTM
     public function prepareInputForAdd($input)
     {
 
-       //If no behavior selected
+        //If no behavior selected
         if (!isset($input['name']) || ($input['name'] == '')) {
             Session::addMessageAfterRedirect(
                 __('Please enter a name for the model', 'datainjection'),
@@ -1013,7 +1007,7 @@ class PluginDatainjectionModel extends CommonDBTM
         $only_header       = (isset($options['only_header']) ? $options['only_header'] : false);
         $delete_file       = (isset($options['delete_file']) ? $options['delete_file'] : true);
 
-       //Get model & model specific fields
+        //Get model & model specific fields
         $this->loadSpecificModel();
 
         if (!$webservice) {
@@ -1032,34 +1026,34 @@ class PluginDatainjectionModel extends CommonDBTM
             }
         }
 
-       //If file has not the right extension, reject it and delete if
+        //If file has not the right extension, reject it and delete if
         if ($this->specific_model->checkFileName($original_filename)) {
             $message  = __('File format is wrong', 'datainjection');
             $message .= "<br>" . __('Extension csv required', 'datainjection');
             if (!$webservice) {
                 Session::addMessageAfterRedirect($message, true, ERROR, false);
             }
-           //unlink($temporary_uniquefilename);
+            //unlink($temporary_uniquefilename);
             return ['status'  => ERROR,
                 'message' => $message
             ];
         } else {
-           //Initialise a new backend
+            //Initialise a new backend
             $backend = PluginDatainjectionBackend::getInstance($this->fields['filetype']);
-           //Init backend with needed values
+            //Init backend with needed values
             $backend->init($unique_filename, $file_encoding);
             $backend->setHeaderPresent($this->specific_model->fields['is_header_present']);
             $backend->setDelimiter($this->specific_model->fields['delimiter']);
 
             if (!$webservice) {
-               //Read n line from the CSV file if not webservice
+                //Read n line from the CSV file if not webservice
                 $injectionData = $backend->read(20);
             } else {
-               //Read the whole file
+                //Read the whole file
                 $injectionData = $backend->read(-1);
             }
 
-           //Read the whole file and store the number of lines found
+            //Read the whole file and store the number of lines found
             $backend->storeNumberOfLines();
             $_SESSION['datainjection']['lines']   = serialize($injectionData);
             $_SESSION['datainjection']['nblines'] = $backend->getNumberOfLines();
@@ -1102,7 +1096,7 @@ class PluginDatainjectionModel extends CommonDBTM
                       ? $options['file_encoding'] : PluginDatainjectionBackend::ENCODING_AUTO);
         $mode          = (isset($options['mode']) ? $options['mode'] : self::PROCESS);
 
-       //Get model & model specific fields
+        //Get model & model specific fields
         $this->loadSpecificModel();
         $response = $this->readUploadedFile($options);
         if (!$this->injectionData) {
@@ -1127,7 +1121,7 @@ class PluginDatainjectionModel extends CommonDBTM
         } else {
             $check['status'] = PluginDatainjectionCommonInjectionLib::SUCCESS;
         }
-       //There's an error
+        //There's an error
         if ($check['status'] != PluginDatainjectionCommonInjectionLib::SUCCESS) {
             if ($mode == self::PROCESS) {
                 if (!isset($options['webservice'])) {
@@ -1144,14 +1138,14 @@ class PluginDatainjectionModel extends CommonDBTM
 
         $mappingCollection = new PluginDatainjectionMappingCollection();
 
-       //Delete existing mappings only in model creation mode !!
+        //Delete existing mappings only in model creation mode !!
         if ($mode == self::CREATION) {
-           //If mapping still exists in DB, delete all of them !
+            //If mapping still exists in DB, delete all of them !
             $mappingCollection->deleteMappingsFromDB($this->fields['id']);
         }
 
         $rank = 0;
-       //Build the mappings list
+        //Build the mappings list
         foreach (
             PluginDatainjectionBackend::getHeader(
                 $this->injectionData,
@@ -1169,11 +1163,11 @@ class PluginDatainjectionModel extends CommonDBTM
         }
 
         if ($mode == self::CREATION) {
-           //Save the mapping list in DB
+            //Save the mapping list in DB
             $mappingCollection->saveAllMappings();
             self::changeStep($this->fields['id'], self::MAPPING_STEP);
 
-           //Add redirect message
+            //Add redirect message
             Session::addMessageAfterRedirect(__('The file is ok.', 'datainjection'), true, INFO);
         }
 
@@ -1191,13 +1185,13 @@ class PluginDatainjectionModel extends CommonDBTM
 
         $field_in_error = false;
 
-       //Get CSV file first line
+        //Get CSV file first line
         $header = PluginDatainjectionBackend::getHeader(
             $this->injectionData,
             $this->specific_model->isHeaderPresent()
         );
 
-       //If file columns don't match number of mappings in DB
+        //If file columns don't match number of mappings in DB
         $nb = count($this->getMappings());
         if ($nb != count($header)) {
             $error_message  = __('The number of columns of the file is incorrect.', 'datainjection') . "\n";
@@ -1205,20 +1199,20 @@ class PluginDatainjectionModel extends CommonDBTM
                 _n('%d awaited column', '%d awaited columns', $nb, 'datainjection'),
                 $nb
             ) . "\n";
-             $error_message .= sprintf(
-                 _n(
-                     '%d found column',
-                     '%d found columns',
-                     count($header),
-                     'datainjection'
-                 ),
-                 count($header)
-             );
+            $error_message .= sprintf(
+                _n(
+                    '%d found column',
+                    '%d found columns',
+                    count($header),
+                    'datainjection'
+                ),
+                count($header)
+            );
 
-             return ['status'         => PluginDatainjectionCommonInjectionLib::FAILED,
-                 'field_in_error' => false,
-                 'error_message'  => $error_message
-             ];
+            return ['status'         => PluginDatainjectionCommonInjectionLib::FAILED,
+                'field_in_error' => false,
+                'error_message'  => $error_message
+            ];
         }
 
         //If no header in the CSV file, exit method
@@ -1234,13 +1228,13 @@ class PluginDatainjectionModel extends CommonDBTM
             'error_message'  => ''
         ];
 
-       //Check each mapping to be sure it has exactly the same name
+        //Check each mapping to be sure it has exactly the same name
         foreach ($this->getMappings() as $key => $mapping) {
             if (!isset($header[$key])) {
                 $error['status']         = PluginDatainjectionCommonInjectionLib::FAILED;
                 $error['field_in_error'] = $key;
             } else {
-               //If name of the mapping is not equal in the csv file header and in the DB
+                //If name of the mapping is not equal in the csv file header and in the DB
                 $name_from_file = trim(
                     mb_strtoupper(
                         stripslashes($header[$mapping->getRank()]),
@@ -1280,7 +1274,7 @@ class PluginDatainjectionModel extends CommonDBTM
     public function checkMandatoryFields($fields)
     {
 
-       //Load infos associated with the model
+        //Load infos associated with the model
         $this->loadInfos();
         $check = true;
 
@@ -1369,7 +1363,7 @@ class PluginDatainjectionModel extends CommonDBTM
     public static function cleanSessionVariables()
     {
 
-       //Reset parameters stored in session
+        //Reset parameters stored in session
         PluginDatainjectionSession::removeParams();
         PluginDatainjectionSession::setParam('infos', []);
     }
@@ -1458,18 +1452,18 @@ class PluginDatainjectionModel extends CommonDBTM
                             ($key !== 'status')
                             && ($val[0] != PluginDatainjectionCommonInjectionLib::SUCCESS)
                         ) {
-                             $tmp['check_message'] .= ($first ? '' : "\n") .
-                                       sprintf(
-                                           __('%1$s (%2$s)'),
-                                           PluginDatainjectionCommonInjectionLib::getLogLabel($val[0]),
-                                           $val[1]
-                                       );
-                              $first = false;
+                            $tmp['check_message'] .= ($first ? '' : "\n") .
+                                      sprintf(
+                                          __('%1$s (%2$s)'),
+                                          PluginDatainjectionCommonInjectionLib::getLogLabel($val[0]),
+                                          $val[1]
+                                      );
+                            $first = false;
                         }
                     }
                 }
 
-               //Store the action type (add/update)
+                //Store the action type (add/update)
                 if (isset($result['type'])) {
                     $tmp['type'] = PluginDatainjectionCommonInjectionLib::getActionLabel($result['type']);
                 }
@@ -1478,7 +1472,7 @@ class PluginDatainjectionModel extends CommonDBTM
                     $tmp['item'] = $result[$model->fields['itemtype']];
                     $url         = Toolbox::getItemTypeFormURL($model->fields['itemtype']) . "?id=" .
                                                   $result[$model->fields['itemtype']];
-                   //redefine genericobject url of needed
+                    //redefine genericobject url of needed
                     $plugin = new Plugin();
                     if (
                         $plugin->isActivated('genericobject')
@@ -1655,17 +1649,17 @@ class PluginDatainjectionModel extends CommonDBTM
             $pdf->newPage();/** @phpstan-ignore-line */
 
             if (isset($logresults[PluginDatainjectionCommonInjectionLib::SUCCESS])) {
-                  $pdf->setColumnsSize(100);/** @phpstan-ignore-line */
-                  $pdf->displayTitle('<b>' . __('Array of successful injections', 'datainjection') . '</b>');/** @phpstan-ignore-line */
-                  $pdf->setColumnsSize(6, 54, 20, 20);/** @phpstan-ignore-line */
-                  $pdf->setColumnsAlign('center', 'center', 'center', 'center');/** @phpstan-ignore-line */
-                  $col0 = '<b>' . __('Line', 'datainjection') . '</b>';
-                  $col1 = '<b>' . __('Data Import', 'datainjection') . '</b>';
-                  $col2 = '<b>' . __('Injection type', 'datainjection') . '</b>';
-                  $col3 = '<b>' . __('Object Identifier', 'datainjection') . '</b>';
-                  $pdf->displayTitle($col0, $col1, $col2, $col3);/** @phpstan-ignore-line */
+                $pdf->setColumnsSize(100);/** @phpstan-ignore-line */
+                $pdf->displayTitle('<b>' . __('Array of successful injections', 'datainjection') . '</b>');/** @phpstan-ignore-line */
+                $pdf->setColumnsSize(6, 54, 20, 20);/** @phpstan-ignore-line */
+                $pdf->setColumnsAlign('center', 'center', 'center', 'center');/** @phpstan-ignore-line */
+                $col0 = '<b>' . __('Line', 'datainjection') . '</b>';
+                $col1 = '<b>' . __('Data Import', 'datainjection') . '</b>';
+                $col2 = '<b>' . __('Injection type', 'datainjection') . '</b>';
+                $col3 = '<b>' . __('Object Identifier', 'datainjection') . '</b>';
+                $pdf->displayTitle($col0, $col1, $col2, $col3);/** @phpstan-ignore-line */
 
-                  $index = 0;
+                $index = 0;
                 foreach ($logresults[PluginDatainjectionCommonInjectionLib::SUCCESS] as $result) {
                     $pdf->displayLine(/** @phpstan-ignore-line */
                         $result['line'],
@@ -1701,11 +1695,11 @@ class PluginDatainjectionModel extends CommonDBTM
                     );
 
                     if ($result['check_message']) {
-                           $pdf->displayText(/** @phpstan-ignore-line */
-                               '<b>' . __('Data check', 'datainjection') . '</b> :',
-                               $result['check_message'],
-                               1
-                           );
+                        $pdf->displayText(/** @phpstan-ignore-line */
+                            '<b>' . __('Data check', 'datainjection') . '</b> :',
+                            $result['check_message'],
+                            1
+                        );
                     }
                 }
             }
